@@ -55,8 +55,8 @@ router.get('/:scheduleId', authenticationEnsurer, (req, res, next) => {
         next(err);
       }
     })
-    .then((candidates) => {
-      // データベースからその予定のすべての出欠を取得する
+    .then(candidates => {
+      // データベースからその予定の全ての出欠を取得する
       storedCandidates = candidates;
       return Availability.findAll({
         include: [
@@ -72,16 +72,16 @@ router.get('/:scheduleId', authenticationEnsurer, (req, res, next) => {
         ]
       });
     })
-    .then((availabilities) => {
-      // 出欠 MapMap(キー:ユーザー ID, 値:出欠Map(キー:候補 ID, 値:出欠))
-      const availabilityMapMap = new Map(); // key: userId, value: Map(candidateId, availability)
+    .then(availabilities => {
+      // 出欠 MapMap(キー:ユーザー ID, 値:出欠Map(キー:候補 ID, 値:出欠)) を作成する
+      const availabilityMapMap = new Map(); // key: userId, value: Map(key: candidateId, availability)
       availabilities.forEach(a => {
         const map = availabilityMapMap.get(a.user.userId) || new Map();
         map.set(a.candidateId, a.availability);
         availabilityMapMap.set(a.user.userId, map);
       });
 
-      //閲覧ユーザーと出欠に紐付くユーザーからユーザー Map (キー:ユーザー ID, 値:ユーザー) を作る
+      // 閲覧ユーザーと出欠に紐づくユーザーからユーザー Map (キー:ユーザー ID, 値:ユーザー) を作る
       const userMap = new Map(); // key: userId, value: User
       userMap.set(parseInt(req.user.id), {
         isSelf: true,
@@ -97,7 +97,7 @@ router.get('/:scheduleId', authenticationEnsurer, (req, res, next) => {
       });
 
       // 全ユーザー、全候補で二重ループしてそれぞれの出欠の値がない場合には、「欠席」を設定する
-      const users = Array.from(userMap).map((keyValue) => keyValue[1]);
+      const users = Array.from(userMap).map(keyValue => keyValue[1]);
       users.forEach(u => {
         storedCandidates.forEach(c => {
           const map = availabilityMapMap.get(u.userId) || new Map();
@@ -110,7 +110,7 @@ router.get('/:scheduleId', authenticationEnsurer, (req, res, next) => {
       // コメント取得
       return Comment.findAll({
         where: { scheduleId: storedSchedule.scheduleId }
-      }).then((comments) => {
+      }).then(comments => {
         const commentMap = new Map(); // key: userId, value: comment
         comments.forEach(comment => {
           commentMap.set(comment.userId, comment.comment);
@@ -123,7 +123,7 @@ router.get('/:scheduleId', authenticationEnsurer, (req, res, next) => {
           availabilityMapMap: availabilityMapMap,
           commentMap: commentMap
         });
-      })
+      });
     });
 });
 
@@ -177,7 +177,7 @@ router.post('/:scheduleId', authenticationEnsurer, (req, res, next) => {
           if (candidateNames) {
             createCandidatesAndRedirect(candidateNames, schedule.scheduleId, res);
           } else {
-            res.redirect('/schedules/' + schedule.scheduleId)
+            res.redirect('/schedules/' + schedule.scheduleId);
           }
         });
       } else if (parseInt(req.query.delete) === 1) {
